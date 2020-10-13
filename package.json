@@ -1,0 +1,30 @@
+{
+  "name": "viz-links",
+  "version": "1.0.0",
+  "description": "Create links with Viz blockchain",
+  "main": "vizlinks.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/denis-skripnik/viz-links.git"
+  },
+  "keywords": [
+    "viz",
+    "blockchain",
+    "links"
+  ],
+  "author": "denis-skripnik",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/denis-skripnik/viz-links/issues"
+  },
+  "homepage": "https://github.com/denis-skripnik/viz-links#readme",
+  "dependencies": {
+    "cron": "^1.8.2",
+    "express": "^4.16.4",
+    "mongodb": "latest",
+    "viz-js-lib": "latest"
+  }
+}
