@@ -40,7 +40,7 @@ for(let tr of block) {
         switch(op) {
             case "receive_award":
 let data = opbody.memo.split(',');
-if (opbody.to === 'committee' && data.length === 3) {
+if (opbody.receiver === 'committee' && data.length === 3) {
    ok_ops_count += await receiveAwardOperation(opbody.custom_sequence, parseFloat(opbody.shares), data);
 }
             break;
