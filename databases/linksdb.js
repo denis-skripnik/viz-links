@@ -85,96 +85,51 @@ return err;
 }
 
 async function fullQuerySearchResults(query, page) {
-    const client = await db.getClient();
 
-if (!client) {
-    return;
-}
-
-try {
-
-    const db = client.db("viz-links");
-
-    let collection = db.collection('links');
-    const sorting = {};
-    sorting['shares'] = -1;
-    let skip = page * 10 - 10;
-
-    collection.createIndex(sorting, function (err) {
-        if (err) {
-            console.error(JSON.stringify(err));
-        }
-          });
-
-    const res = [];
-    let cursor = await collection.find({keyword: query}).sort(sorting).skip(skip).limit(10);
-    let doc = null;
-    while(null != (doc = await cursor.next())) {
-        res.push({link: doc.link, in_links: [doc.in_link]});
-    }
-return res;
-  } catch (err) {
-
-    console.log(err);
-return err;
-  } finally {
-
-
-}
-}
-
-async function unFullQuerySearchResults(query, page) {
     const client = await db.getClient();
     if (!client) {
         return;
     }
     try {
 
-        let res = []
         const db = client.db("viz-links");
-        let collection = db.collection('links');
+        const collection = db.collection('links');
 
-        try {
+        let search = { keyword: query }
+        let projection = { score: { $meta: 'textScore' } }
+        let sort = { score: { $meta: 'textScore' }}
+        let cursor = collection.find(search, { projection, sort })
 
-        } catch (error) {
+        let res = []
 
+        let rowsCountOnPage = 10
+        let pageNumber = page > 0 ? page : 1
+        let limitRows = Math.ceil(rowsCountOnPage*pageNumber)
+        let skipRows = Math.ceil(rowsCountOnPage*(pageNumber-1))
+
+        for await (let record of cursor) {
+            let unique = res.every(function(item){
+                if (item.keyword === record.keyword) {
+                    if (item.link !== record.link) {
+                        item.inlinks.push(record.in_link)
+                    }
+                    return false
+                }
+                return true
+            })
+            if (unique) {
+                record.inlinks = [record.in_link]
+                delete record._id
+                delete record.keyword
+                delete record.in_link
+                delete record.score 
+                res.push(record)
+            }
+            if (res.length >= limitRows) {
+                break
+            }
         }
-        // делаем индекс на поле по которому будем искать
-        collection.dropIndex('keyword_text')
-        collection.createIndex({ 'keyword': 'text' }, { default_language: "russian" });
-
-        // разбиваем поисковый запрос на слова
-        let words = query.split(' ');
-        // проверяем количество слов
-        if (words.length <= 0) {
-            // если нет слов в запросе, значит возвращаем пустой результат
-            return res;
-        }
-
-        // объявляем количество строк для страницы
-        let limitRows = 10;
-        // запускаем цикл поиска в массиве по каждуому слову в поисковом запросе
-        for (let word of words) {
-            // ищем в в колекции по индексу текущее слово
-            let cursor = collection.find({ $text: { $search: word } })//.limit(limitRows);
-            let rows = null;
-            while (null !== (rows = await cursor.next())) {
-                res.concat(rows);
-            };
-        };
-        console.log(query, words, res)
-        // сортируем результирующий массив по score (коэфициент совпадения)
-        // res.sort(function(item1, item2){
-        //     return item2.score - item1.score;
-        // });
-        // проверяем конечный результат на количество строк
-        // использовать page!!!
-        // if (res.length > limitRows) {
-        //     res.splice(limitRows, res.length-limitRows)
-        // } else {
-        //     return res;
-        // }
-        return res;
+        return res.slice(skipRows, limitRows+skipRows)
 
     } catch (err) {
         console.log(err);
@@ -182,6 +137,63 @@ async function unFullQuerySearchResults(query, page) {
     } finally {
 
     }
+
+}
+
+async function unFullQuerySearchResults(query, page) {
+
+    const client = await db.getClient();
+    if (!client) {
+        return;
+    }
+    try {
+
+        const db = client.db("viz-links");
+        const collection = db.collection('links');
+
+        let search = {keyword: new RegExp((`${query.split(' ').join('|')}`), 'i')}
+        let projection = { score: { $meta: 'textScore' } }
+        let sort = { score: { $meta: 'textScore' }}
+        let cursor = collection.find(search, { projection, sort })
+
+        let res = []
+
+        let rowsCountOnPage = 10
+        let pageNumber = page > 0 ? page : 1
+        let limitRows = Math.ceil(rowsCountOnPage*pageNumber)
+        let skipRows = Math.ceil(rowsCountOnPage*(pageNumber-1))
+
+        for await (let record of cursor) {
+            let unique = res.every(function(item){
+                if (item.keyword === record.keyword) {
+                    if (item.link !== record.link) {
+                        item.inlinks.push(record.in_link)
+                    }
+                    return false
+                }
+                return true
+            })
+            if (unique) {
+                record.inlinks = [record.in_link]
+                delete record._id
+                delete record.in_link
+                delete record.score 
+                res.push(record)
+            }
+            if (res.length >= limitRows) {
+                break
+            }
+        }
+
+        return res.slice(skipRows, limitRows+skipRows)
+
+    } catch (err) {
+        console.log(err);
+        return err;
+    } finally {
+
+    }
+
 }
 
 module.exports.getLink = getLink;
