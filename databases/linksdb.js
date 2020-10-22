@@ -97,7 +97,7 @@ async function fullQuerySearchResults(query, page) {
 
         let search = { keyword: query }
         let projection = { score: { $meta: 'textScore' } }
-        let sort = { score: { $meta: 'textScore' }}
+        let sort = { shares:-1, score: { $meta: 'textScore' }}
         let cursor = collection.find(search, { projection, sort })
 
         let res = []
@@ -153,7 +153,7 @@ async function unFullQuerySearchResults(query, page) {
 
         let search = {keyword: new RegExp((`${query.split(' ').join('|')}`), 'i')}
         let projection = { score: { $meta: 'textScore' } }
-        let sort = { score: { $meta: 'textScore' }}
+        let sort = { shares:-1, score: { $meta: 'textScore' }}
         let cursor = collection.find(search, { projection, sort })
 
         let res = []
