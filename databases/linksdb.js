@@ -150,10 +150,11 @@ async function unFullQuerySearchResults(query, page) {
 
         const db = client.db("viz-links");
         const collection = db.collection('links');
+        collection.createIndex({ 'keyword': 'text' });
 
-        let search = {keyword: new RegExp((`${query.split(' ').join('|')}`), 'i')}
+        let search = { keyword: new RegExp((`${query}`), 'i') }
         let projection = { score: { $meta: 'textScore' } }
-        let sort = { shares:-1, score: { $meta: 'textScore' }}
+        let sort = { shares:-1 }
         let cursor = collection.find(search, { projection, sort })
 
         let res = []
@@ -184,6 +185,8 @@ async function unFullQuerySearchResults(query, page) {
                 break
             }
         }
+
+        collection.dropIndex('keyword_text');
 
         return res.slice(skipRows, limitRows+skipRows)
 
