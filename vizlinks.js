@@ -24,6 +24,11 @@ async function receiveAwardOperation(custom_sequence, shares, data) {
     protocol = 'magnet://'
 }
 
+if (data[1].indexOf('https') > -1) data[1] = data[1].substr(8);
+if (data[1].indexOf('http') > -1) data[1] = data[1].substr(7);
+if (data[2].indexOf('https') > -1) data[2] = data[2].substr(8);
+if (data[2].indexOf('http') > -1) data[2] = data[2].substr(7);
+
 let keyword = data[0].toLowerCase().trim();
 let link = await ldb.getLink(keyword, protocol + data[1], protocol + data[2]);
 if (link) {
