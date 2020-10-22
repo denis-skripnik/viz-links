@@ -95,41 +95,40 @@ async function fullQuerySearchResults(query, page) {
         const db = client.db("viz-links");
         const collection = db.collection('links');
 
-        let search = { keyword: query }
-        let projection = { score: { $meta: 'textScore' } }
-        let sort = { shares:-1, score: { $meta: 'textScore' }}
-        let cursor = collection.find(search, { projection, sort })
+        let search = { keyword: query };
+        let sort = { shares:-1 };
+        let cursor = collection.find(search, { sort });
 
-        let res = []
+        let res = [];
 
-        let rowsCountOnPage = 10
-        let pageNumber = page > 0 ? page : 1
-        let limitRows = Math.ceil(rowsCountOnPage*pageNumber)
-        let skipRows = Math.ceil(rowsCountOnPage*(pageNumber-1))
+        let rowsCountOnPage = 10;
+        let pageNumber = page > 0 ? page : 1;
+        let limitRows = Math.ceil(rowsCountOnPage*pageNumber);
+        let skipRows = Math.ceil(rowsCountOnPage*(pageNumber-1));
 
         for await (let record of cursor) {
             let unique = res.every(function(item){
                 if (item.keyword === record.keyword) {
                     if (item.link !== record.link) {
-                        item.inlinks.push(record.in_link)
+                        item.inlinks.push(record.in_link);
                     }
-                    return false
+                    return false;
                 }
-                return true
+                return true;
             })
             if (unique) {
-                record.inlinks = [record.in_link]
-                delete record._id
-                delete record.keyword
-                delete record.in_link
-                delete record.score 
-                res.push(record)
+                record.inlinks = [record.in_link];
+                delete record._id;
+                delete record.keyword;
+                delete record.in_link;
+                delete record.score;
+                res.push(record);
             }
             if (res.length >= limitRows) {
-                break
+                break;
             }
         }
-        return res.slice(skipRows, limitRows+skipRows)
+        return res.slice(skipRows, limitRows+skipRows);
 
     } catch (err) {
         console.log(err);
@@ -150,45 +149,40 @@ async function unFullQuerySearchResults(query, page) {
 
         const db = client.db("viz-links");
         const collection = db.collection('links');
-        collection.createIndex({ 'keyword': 'text' });
 
-        let search = { keyword: new RegExp((`${query}`), 'i') }
-        let projection = { score: { $meta: 'textScore' } }
-        let sort = { shares:-1 }
-        let cursor = collection.find(search, { projection, sort })
+        let search = { keyword: new RegExp((`${query}`), 'i') };
+        let sort = { shares:-1 };
+        let cursor = collection.find(search, { sort });
 
-        let res = []
+        let res = [];
 
-        let rowsCountOnPage = 10
-        let pageNumber = page > 0 ? page : 1
-        let limitRows = Math.ceil(rowsCountOnPage*pageNumber)
-        let skipRows = Math.ceil(rowsCountOnPage*(pageNumber-1))
+        let rowsCountOnPage = 10;
+        let pageNumber = page > 0 ? page : 1;
+        let limitRows = Math.ceil(rowsCountOnPage*pageNumber);
+        let skipRows = Math.ceil(rowsCountOnPage*(pageNumber-1));
 
         for await (let record of cursor) {
             let unique = res.every(function(item){
                 if (item.keyword === record.keyword) {
                     if (item.link !== record.link) {
-                        item.inlinks.push(record.in_link)
+                        item.inlinks.push(record.in_link);
                     }
-                    return false
+                    return false;
                 }
-                return true
+                return true;
             })
             if (unique) {
-                record.inlinks = [record.in_link]
-                delete record._id
-                delete record.in_link
-                delete record.score 
-                res.push(record)
+                record.inlinks = [record.in_link];
+                delete record._id;
+                delete record.in_link;
+                delete record.score ;
+                res.push(record);
             }
             if (res.length >= limitRows) {
-                break
+                break;
             }
         }
-
-        collection.dropIndex('keyword_text');
-
-        return res.slice(skipRows, limitRows+skipRows)
+        return res.slice(skipRows, limitRows+skipRows);
 
     } catch (err) {
         console.log(err);
