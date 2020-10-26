@@ -18,7 +18,7 @@ if (type === 'full_search' && page && query) {
     query = query.toLowerCase().trim();
     let data = await ldb.unFullQuerySearchResults(query, page);
     res.send(data);
-} else if (type === 'in_link' && query) {
+} else if (type === 'in_link' && link) {
     let data = await ldb.findInLink(link);
     res.send(data);
 }
