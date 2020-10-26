@@ -84,6 +84,36 @@ return err;
 }
 }
 
+async function findInLink(in_link) {
+    const client = await db.getClient();
+
+if (!client) {
+    return;
+}
+
+try {
+
+    const db = client.db("viz-links");
+
+    let collection = db.collection('links');
+
+    const res = [];
+    let cursor = await collection.find({in_link}).limit(500);
+    let doc = null;
+    while(null != (doc = await cursor.next())) {
+        res.push(doc);
+    }
+return res;
+  } catch (err) {
+
+    console.log(err);
+return err;
+  } finally {
+
+
+}
+}
+
 async function fullQuerySearchResults(query, page) {
 
     const client = await db.getClient();
@@ -196,5 +226,6 @@ async function unFullQuerySearchResults(query, page) {
 module.exports.getLink = getLink;
 module.exports.updateLink = updateLink;
 module.exports.findAllLinks = findAllLinks;
+module.exports.findInLink = findInLink;
 module.exports.fullQuerySearchResults = fullQuerySearchResults;
 module.exports.unFullQuerySearchResults = unFullQuerySearchResults;
