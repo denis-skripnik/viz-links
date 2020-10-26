@@ -3,7 +3,6 @@ require("./databases/@db.js").initialize({
     poolSize: 15
 });
 require("./js_modules/api");
-const CronJob = require('cron').CronJob;
 const helpers = require("./js_modules/helpers");
 const methods = require("./js_modules/methods");
 const bdb = require("./databases/blocksdb");
@@ -37,7 +36,23 @@ if (link) {
 await ldb.updateLink(keyword, protocol + data[1], protocol + data[2], shares);
 }
 
+async function updateShares() {
+    let links = await ldb.findAllLinks();
+if (links && links.length > 0) {
+    for (let link of links) {
+        let shares = link.shares * 0.99;
+        shares = shares.toFixed(6);
+        shares = parseFloat(shares);
+        await ldb.updateLink(link.keyword, link.link, link.in_link, shares);
+    }
+}
+}
+
 async function processBlock(bn) {
+    if (bn%28800 == 0) {
+await updateShares();
+    }
+
     const block = await methods.getOpsInBlock(bn);
 let ok_ops_count = 0;
 for(let tr of block) {
@@ -64,7 +79,7 @@ let delay = SHORT_DELAY;
 
 async function getNullTransfers() {
     PROPS = await methods.getProps();
-            const block_n = await bdb.getBlock(PROPS.last_irreversible_block_num);
+            const block_n = await bdb.getBlock(21596980);
 bn = block_n.last_block;
 
 delay = SHORT_DELAY;
@@ -103,17 +118,3 @@ setInterval(() => {
 }, SUPER_LONG_DELAY);
 
 getNullTransfers()
-
-async function updateShares() {
-    let links = await ldb.findAllLinks();
-if (links && links.length > 0) {
-    for (let link of links) {
-        let shares = link.shares * 0.99;
-        shares = shares.toFixed(6);
-        shares = parseFloat(shares);
-        await ldb.updateLink(link.keyword, link.link, link.in_link, shares);
-    }
-}
-}
-
-new CronJob('0 0 0 * * *', updateShares, null, true);

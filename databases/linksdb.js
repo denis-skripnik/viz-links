@@ -84,7 +84,7 @@ return err;
 }
 }
 
-async function findInLink(in_link) {
+async function findInLink(in_link, page) {
     const client = await db.getClient();
 
 if (!client) {
@@ -97,8 +97,12 @@ try {
 
     let collection = db.collection('links');
 
+    const sorting = {};
+    sorting['shares'] = -1;
+    let skip = page * 100 - 100;
+
     const res = [];
-    let cursor = await collection.find({in_link}).limit(500);
+    let cursor = await collection.find({in_link}).sort(sorting).skip(skip).limit(100);
     let doc = null;
     while(null != (doc = await cursor.next())) {
         res.push(doc);
