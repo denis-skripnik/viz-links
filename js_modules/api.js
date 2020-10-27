@@ -21,7 +21,10 @@ app.get('/viz-links/', async function (req, res) {
     // получаем ключ из запроса
     let auth = req.query.auth;
     // проверяем ключ на наличие авторизации
-    let keyAuth = await keyCheckAuth(auth)
+    let keyAuth = false
+    if (typeof auth === 'string') {
+        keyAuth = await keyCheckAuth(auth)
+    }
     // объявляем переменную на указатель класса ограничителя
     let limiter = null
 
@@ -40,7 +43,7 @@ app.get('/viz-links/', async function (req, res) {
     if (!limiter.increase()) {
         // если увеличение счетчика не произошло, значит сейчас введено ограничение
         // отправляем сообщение об ограничении запросов
-        res.send({message: "error", description: "The limit is exhausted"})
+        res.send({ message: "error", description: "The limit is exhausted" })
         // выходим из обработчика маршрута
         return
     }
@@ -72,28 +75,28 @@ app.get('/viz-links/', async function (req, res) {
 app.listen(7000, function () {
 });
 
-const keyCheckAuth = async function(aKey){
+const keyCheckAuth = async function (aKey) {
     let auth_data = aKey.split(':'); // 0 - логин, 1 - ключ, 2 - unixtime, 3 - подпись.
     let signature = auth_data[3];
     let vizpubkey = auth_data[1];
     let acc = await methods.getAccount(auth_data[0])[0];
     let unixtime = await helpers.unixTime();
     let isAuth = false;
-    if (acc && auth_data[2] >= unixtime -10000 && auth_data[2] >= unixtime) {
-    let approve_key = false;
-    for (key of acc.regular_authority.key_auths) {
-    if (key[0] === vizpubkey) {
-    approve_key = true;
+    if (acc && auth_data[2] >= unixtime - 10000 && auth_data[2] >= unixtime) {
+        let approve_key = false;
+        for (key of acc.regular_authority.key_auths) {
+            if (key[0] === vizpubkey) {
+                approve_key = true;
+            }
+        }
+
+        if (approve_key == true) {
+            let verifyData = viz.auth.signature.verifyData(data, signature, VIZPUBKEY)
+            if (verifyData == true) {
+                let status = await methods.getSubscriptionStatus(auth_data[0], conf.provider_account);
+                isAuth = true;
+            }
+        }
     }
-    }
-    
-    if (approve_key == true) {
-    let verifyData = viz.auth.signature.verifyData(data, signature, VIZPUBKEY)
-    if (verifyData == true) {
-let status = await methods.getSubscriptionStatus(auth_data[0], conf.provider_account);
-        isAuth = true;
-    }
-    }
-    }
-    return true;
+    return isAuth;
 }
