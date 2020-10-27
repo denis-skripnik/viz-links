@@ -4,7 +4,7 @@ const me = module.exports = function(aLimit = 100){
     let count = 0
 
     this.increase = function(){
-        let state = (count <= limit)
+        let state = (count < limit)
         if (state) {
             count ++
         }
