@@ -6,11 +6,11 @@ const ldb = require("../databases/linksdb");
 const conf = require('../config.json');
 
 // загружаем библиотеку ограничителя
-const Limiter = require('./limiter.js')
+const Limiter = require('./limiter.js');
 
-// создаем экземпляры класа ограничителя для авторизованных и не авторизованных запросов
-const authTrueLimiter = new Limiter(30)
-const authFalseLimiter = new Limiter(2)
+// создаем экземпляры класса ограничителя для авторизованных и не авторизованных запросов
+const authTrueLimiter = new Limiter(30);
+const authFalseLimiter = new Limiter(2);
 
 app.get('/viz-links/', async function (req, res) {
     let type = req.query.type;
@@ -19,26 +19,26 @@ app.get('/viz-links/', async function (req, res) {
     let link = req.query.link;
 
     // получаем ключ из запроса
-    let key = req.query.key
+    let auth = req.query.auth;
     // проверяем ключ на наличие авторизации
-    let keyAuth = await keyCheckAuth(key)
-    // объявляем переменную на указатель класа ограничителя
+    let keyAuth = await keyCheckAuth(auth)
+    // объявляем переменную на указатель класса ограничителя
     let limiter = null
 
-    // проверяем резульатт проверки ключа на авторизацию
+    // проверяем результатт проверки ключа на авторизацию
     if (keyAuth) {
         // ключ авторизованный
-        // используем ограничитель для аворизованных запросов
+        // используем ограничитель для авторизованных запросов
         limiter = authTrueLimiter
     } else {
         // ключ не авторизованный
-        // используем ограничитель для аворизованных запросов
+        // используем ограничитель для авторизованных запросов
         limiter = authFalseLimiter
     }
 
     // увеличиваем счетчик ограничителя
     if (!limiter.increase()) {
-        // если увеличиение счетчика не произошло, значит сейчас введено ограничени
+        // если увеличение счетчика не произошло, значит сейчас введено ограничение
         // отправляем сообщение об ограничении запросов
         res.send({message: "error", description: "The limit is exhausted"})
         // выходим из обработчика маршрута
@@ -65,7 +65,7 @@ app.get('/viz-links/', async function (req, res) {
         console.log(error)
     } finally {
         // в данной секции нам надо уменьшить счетчик
-        limiter.decrease()
+        limiter.decrease();
     }
 
 });
@@ -73,9 +73,27 @@ app.listen(7000, function () {
 });
 
 const keyCheckAuth = async function(aKey){
-    // тут проверяем ключ на наличие авторизации
-    // данная функция должна вернуть
-    // true - если ключ валидный и является авторизованным
-    // false - если ключ не валидный и не является авторизованным
-    return true
+    let auth_data = aKey.split(':'); // 0 - логин, 1 - ключ, 2 - unixtime, 3 - подпись.
+    let signature = auth_data[3];
+    let vizpubkey = auth_data[1];
+    let acc = await methods.getAccount(auth_data[0])[0];
+    let unixtime = await helpers.unixTime();
+    let isAuth = false;
+    if (acc && auth_data[2] >= unixtime -10000 && auth_data[2] >= unixtime) {
+    let approve_key = false;
+    for (key of acc.regular_authority.key_auths) {
+    if (key[0] === vizpubkey) {
+    approve_key = true;
+    }
+    }
+    
+    if (approve_key == true) {
+    let verifyData = viz.auth.signature.verifyData(data, signature, VIZPUBKEY)
+    if (verifyData == true) {
+let status = await methods.getSubscriptionStatus(auth_data[0], conf.provider_account);
+        isAuth = true;
+    }
+    }
+    }
+    return true;
 }
