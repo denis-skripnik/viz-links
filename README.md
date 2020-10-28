@@ -2,7 +2,7 @@
  Add links for search or more services, using Viz blockchain.
 
 ## Описание
-https://hackathon-on-internet-freedom.github.io/Free-Speech-Project/dapp.html#viz://@denis-skripnik/21288038/
+https://viz.media/viz-links/
 
 ## Установка
 1. Клонируем репозиторий:
