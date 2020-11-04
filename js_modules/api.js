@@ -91,7 +91,7 @@ const keyCheckAuth = async function (aKey) {
         }
 
         if (approve_key == true) {
-            let verifyData = viz.auth.signature.verifyData(data, signature, VIZPUBKEY)
+            let verifyData = await methods.verifyData(data, signature, VIZPUBKEY);
             if (verifyData == true) {
                 let status = await methods.getSubscriptionStatus(auth_data[0], conf.provider_account);
                 isAuth = true;

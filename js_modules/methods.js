@@ -22,6 +22,10 @@ async function wifToPublic(key) {
     return viz.auth.wifToPublic(key);
 }
 
+async function verifyData(data, signature, VIZPUBKEY) {
+    return viz.auth.signature.verifyData(data, signature, VIZPUBKEY);
+}
+
 async function getSubscriptionStatus(subscriber, account) {
     let active = false;
     try {
@@ -38,4 +42,6 @@ module.exports.getProps = getProps;
 module.exports.getAccount = getAccount;
 module.exports.getAccounts = getAccounts;
 module.exports.wifToPublic = wifToPublic;
+
+module.exports.verifyData = verifyData;
 module.exports.getSubscriptionStatus = getSubscriptionStatus;
