@@ -23,7 +23,7 @@ async function wifToPublic(key) {
 }
 
 async function verifyData(data, signature, VIZPUBKEY) {
-    return viz.auth.signature.verifyData(data, signature, VIZPUBKEY);
+    return viz.auth.signature.verifyData(data, viz.auth.signature.fromHex(signature),VIZPUBKEY)
 }
 
 async function getSubscriptionStatus(subscriber, account) {
